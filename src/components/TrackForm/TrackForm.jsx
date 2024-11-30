@@ -1,22 +1,19 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { getTrack, createTrack, updateTrack } from '../../services/trackService';
+import { getTracks } from '../../services/trackService';
 
 const TrackForm = ({ handleAddTrack, handleUpdateTrack }) => {
   const [title, setTitle] = useState('');
   const [artist, setArtist] = useState('');
   const { trackId } = useParams();
-  const navigate = useNavigate();
 
   useEffect(() => {
     if (trackId) {
-      // Fetch track details if editing
+      // If `trackId` exists, we are editing an existing track
       const fetchTrack = async () => {
-        const trackData = await getTrack(trackId);
-        if (trackData) {
-          setTitle(trackData.title);
-          setArtist(trackData.artist);
-        }
+        const trackData = await getTracks(trackId);
+        setTitle(trackData.title);
+        setArtist(trackData.artist);
       };
       fetchTrack();
     }
@@ -29,7 +26,6 @@ const TrackForm = ({ handleAddTrack, handleUpdateTrack }) => {
     } else {
       await handleAddTrack({ title, artist });
     }
-    navigate('/');
   };
 
   return (

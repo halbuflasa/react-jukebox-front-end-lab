@@ -4,6 +4,7 @@ import TrackList from './components/TrackList/TrackList';
 import TrackForm from './components/TrackForm/TrackForm';
 import NowPlaying from './components/NowPlaying/NowPlaying';
 import { getTracks, createTrack, updateTrack, deleteTrack } from './services/trackService';
+import './App.css';
 
 const App = () => {
   const [tracks, setTracks] = useState([]);
