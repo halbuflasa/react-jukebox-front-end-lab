@@ -2,10 +2,12 @@ import { useState, useEffect } from 'react';
 import { Routes, Route, Link, useNavigate } from 'react-router-dom';
 import TrackList from './components/TrackList/TrackList';
 import TrackForm from './components/TrackForm/TrackForm';
-import { getTracks, createTrack, updateTrack } from './services/trackService';
+import NowPlaying from './components/NowPlaying/NowPlaying';
+import { getTracks, createTrack, updateTrack, deleteTrack } from './services/trackService';
 
 const App = () => {
   const [tracks, setTracks] = useState([]);
+  const [nowPlaying, setNowPlaying] = useState(null);
   const navigate = useNavigate();
 
   // Fetch all tracks when the app loads
@@ -33,12 +35,21 @@ const App = () => {
     const updatedTrack = await updateTrack(trackId, trackData);
     if (updatedTrack) {
       setTracks((prevTracks) =>
-        prevTracks.map((track) =>
-          track._id === trackId ? updatedTrack : track
-        )
+        prevTracks.map((track) => (track._id === trackId ? updatedTrack : track))
       );
       navigate('/');
     }
+  };
+
+  // Delete a track
+  const handleDeleteTrack = async (trackId) => {
+    await deleteTrack(trackId);
+    setTracks((prevTracks) => prevTracks.filter((track) => track._id !== trackId));
+  };
+
+  // Play a track
+  const handlePlayTrack = (track) => {
+    setNowPlaying(track);
   };
 
   return (
@@ -49,7 +60,15 @@ const App = () => {
         </Link>
       </div>
       <Routes>
-        <Route path="/" element={<TrackList tracks={tracks} />} />
+        <Route
+          path="/"
+          element={
+            <>
+              <TrackList tracks={tracks} handlePlayTrack={handlePlayTrack} handleDeleteTrack={handleDeleteTrack} />
+              <NowPlaying track={nowPlaying} />
+            </>
+          }
+        />
         <Route path="/add-track" element={<TrackForm handleAddTrack={handleAddTrack} />} />
         <Route path="/edit-track/:trackId" element={<TrackForm handleUpdateTrack={handleUpdateTrack} />} />
       </Routes>
