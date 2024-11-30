@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 
-const TrackList = ({ tracks, handleDeleteTrack }) => {
+const TrackList = ({ tracks, handlePlayTrack, handleDeleteTrack }) => {
   return (
     <div className="track-list-container">
       <h1>Track List</h1>
@@ -13,6 +13,7 @@ const TrackList = ({ tracks, handleDeleteTrack }) => {
               <h3>{track.title}</h3>
               <p className="track-artist">by {track.artist}</p>
               <div className="track-actions">
+                <button onClick={() => handlePlayTrack(track)}>Play</button>
                 <Link to={`/edit-track/${track._id}`}>
                   <button>Edit</button>
                 </Link>

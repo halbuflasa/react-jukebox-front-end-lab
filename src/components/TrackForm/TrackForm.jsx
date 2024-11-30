@@ -1,55 +1,80 @@
-import { useState, useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
-import { getTracks } from '../../services/trackService';
+import React, { useState, useEffect } from 'react';
+import { Routes, Route, Link, useNavigate } from 'react-router-dom';
+import TrackList from './components/TrackList/TrackList';
+import TrackForm from './components/TrackForm/TrackForm';
+import NowPlaying from './components/NowPlaying/NowPlaying';
+import { getTracks, createTrack, updateTrack, deleteTrack } from './services/trackService';
+import './App.css';
 
-const TrackForm = ({ handleAddTrack, handleUpdateTrack }) => {
-  const [title, setTitle] = useState('');
-  const [artist, setArtist] = useState('');
-  const { trackId } = useParams();
+const App = () => {
+  const [tracks, setTracks] = useState([]);
+  const [nowPlaying, setNowPlaying] = useState(null);
+  const navigate = useNavigate();
 
+  // Fetch all tracks when the app loads
   useEffect(() => {
-    if (trackId) {
-      // If `trackId` exists, we are editing an existing track
-      const fetchTrack = async () => {
-        const trackData = await getTracks(trackId);
-        setTitle(trackData.title);
-        setArtist(trackData.artist);
-      };
-      fetchTrack();
-    }
-  }, [trackId]);
+    const fetchTracks = async () => {
+      const data = await getTracks();
+      if (data) {
+        setTracks(data);
+      }
+    };
+    fetchTracks();
+  }, []);
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (trackId) {
-      await handleUpdateTrack(trackId, { title, artist });
-    } else {
-      await handleAddTrack({ title, artist });
+  // Add a new track
+  const handleAddTrack = async (trackData) => {
+    const newTrack = await createTrack(trackData);
+    if (newTrack) {
+      setTracks((prevTracks) => [...prevTracks, newTrack]);
+      navigate('/');
     }
   };
 
+  // Update an existing track
+  const handleUpdateTrack = async (trackId, trackData) => {
+    const updatedTrack = await updateTrack(trackId, trackData);
+    if (updatedTrack) {
+      setTracks((prevTracks) =>
+        prevTracks.map((track) => (track._id === trackId ? updatedTrack : track))
+      );
+      navigate('/');
+    }
+  };
+
+  // Delete a track
+  const handleDeleteTrack = async (trackId) => {
+    await deleteTrack(trackId);
+    setTracks((prevTracks) => prevTracks.filter((track) => track._id !== trackId));
+  };
+
+  // Play a track
+  const handlePlayTrack = (track) => {
+    setNowPlaying(track);
+  };
+
   return (
-    <div className="track-form-container">
-      <h2>{trackId ? 'Edit Track' : 'Add New Track'}</h2>
-      <form onSubmit={handleSubmit}>
-        <label>Title:</label>
-        <input
-          type="text"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          required
+    <>
+      <div className="header">
+        <Link to="/add-track">
+          <button>Add New Track</button>
+        </Link>
+      </div>
+      <Routes>
+        <Route
+          path="/"
+          element={
+            <>
+              <TrackList tracks={tracks} handlePlayTrack={handlePlayTrack} handleDeleteTrack={handleDeleteTrack} />
+              <NowPlaying track={nowPlaying} />
+            </>
+          }
         />
-        <label>Artist:</label>
-        <input
-          type="text"
-          value={artist}
-          onChange={(e) => setArtist(e.target.value)}
-          required
-        />
-        <button type="submit">{trackId ? 'Update Track' : 'Add Track'}</button>
-      </form>
-    </div>
+        <Route path="/add-track" element={<TrackForm handleAddTrack={handleAddTrack} />} />
+        <Route path="/edit-track/:trackId" element={<TrackForm handleUpdateTrack={handleUpdateTrack} />} />
+      </Routes>
+    </>
   );
 };
 
-export default TrackForm;
+export default App;
